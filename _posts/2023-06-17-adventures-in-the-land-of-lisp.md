@@ -306,8 +306,8 @@ would be helped by static type-checking.
     any other language with first-class functions that capture lexical variables,
     and mutable loop-scoped variables. If two clients connect in very rapid
     succession, client will already be the socket of the next client, before the
-    first client thread runs `(socket-stream client)`, the threads for both clients
-    using the stream of the second client. I later realized `usocket` the de facto
+    first client thread runs `(socket-stream client)`, so the threads for both clients
+    will be using the stream of the second client. I later realized `usocket` the de facto
     networking library of common-lisp, has a `socket-serve` function that does the
     work of spawning a thread per connection and passing the stream to a handler
     function, so my buggy code was unnecessary. This is one area of concurrency where
@@ -315,7 +315,7 @@ would be helped by static type-checking.
     - the clojure version doesn't use looping but rather map or reduce or other
     functions over streams
     - clojure is immutable by default so you don't have these issues of multiple
-    lambda capturing the same mutable variable.
+    lambda capturing the same mutable variable.  
 
 3. [another bug sharing sockets between threads](https://www.reddit.com/r/lisp/comments/130o9w8/networking_and_threads/) 
 
