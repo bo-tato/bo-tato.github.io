@@ -162,6 +162,13 @@ lisp for the first time these tradeoffs will be unknown.
     example with SBCL provides a level of compile time warnings comparable to mypy
     and flake8 with python. Clojure has clj-kondo that warns of some things but it
     isn't really comparable.
+    
+    Edit: While I remember having that issue after changing an agent to an atom,
+    it seems my memory is wrong or something else was the issue. Trying now
+    clojure does give a ClassCastException when you pass an agent to `swap!`.
+    Still it is an issue with other core functions, for example
+    [set/intersection](https://ask.clojure.org/index.php/2815/clojure-set-intersection-mishandles-vectors)
+    returns garbage results if you pass it a vector instead of a set.
 
 2. Startup Time
 
@@ -174,6 +181,11 @@ lisp for the first time these tradeoffs will be unknown.
     middleware and other tools could surely be made compatible with babashka, they
     just haven't yet. So the situation with babashka and graalvm will both improve
     in the future.
+    
+    Edit: There's a new possibility in using [CRIU
+    checkpoint/restore](https://yizhepku.github.io/clojure-crac/) that has a lot
+    of potential. You get to keep all the normal JVM libraries and tooling and
+    get almost instant startup.
 
 ## Racket
 
