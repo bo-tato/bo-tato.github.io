@@ -1,0 +1,51 @@
+#!/bin/bash
+
+HOSTUSER=nobody
+
+if [[ $# -ne 2 ]]
+then
+    echo "Usage: $0 [instance] [user]"
+    echo
+    echo "spawns a shell as user in container with a new xpra display"
+    exit 1
+fi
+
+instance=$1
+user=$2
+
+# find a free display number
+display=0
+while [ -f /tmp/.X$display-lock ]
+do
+    let display++
+done
+
+WORKDIR=$(mktemp -d)
+chown $HOSTUSER:$HOSTUSER $WORKDIR
+
+# get host display X magic cookie
+cookie=$(xauth list $DISPLAY)
+
+# make xauthority file HOSTUSER can access
+export XAUTHORITY=$WORKDIR/.Xauthority
+
+# start xpra server and client
+su -s /bin/bash $HOSTUSER <<EOF
+# give HOSTUSER permission to host display
+xauth add $cookie
+xpra start :$display --attach=yes --file-transfer=off --speaker=off --microphone=off --opengl=no --start-new-commands=no --clipboard=no --pulseaudio=no --webcam=no --bind=$WORKDIR/ --socket-dir=$WORKDIR
+EOF
+
+# forward X socket into container
+lxc config device add $instance xorg proxy connect=unix:@/tmp/.X11-unix/X$display listen=unix:@/tmp/.X11-unix/X$display bind=container
+
+# add X magic cookie to container
+lxc exec "$instance" -- su -c "xauth add \$(hostname)/$(xauth -n list unix:$display | cut -d/ -f2-)" $user
+
+# spawn shell with DISPLAY set
+lxc exec "$instance" --env DISPLAY=:$display -- su -w DISPLAY -l $user
+
+# cleanup
+lxc config device remove "$instance" xorg
+su -c "xpra stop :$display --socket-dir=$WORKDIR" -s /bin/bash $HOSTUSER
+rm -r $WORKDIR
